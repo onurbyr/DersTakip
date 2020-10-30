@@ -1,0 +1,17 @@
+@import url("https://fonts.googleapis.com/css?family=Amarante");
+h1 {
+  font-family: "Amarante", Tahoma, sans-serif;
+  font-weight: bold;
+  font-size: 3.6em;
+  line-height: 1.7em;
+  margin-bottom: 10px;
+  text-align: center;
+  color: white;
+}
+.center,
+table {
+  text-align: center;
+}
+.hidden {
+  display: none;
+}
