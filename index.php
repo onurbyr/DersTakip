@@ -5,14 +5,16 @@
   <!-- Required meta tags -->
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous" />
-  <title>Ders Takip Uygulaması</title>
+
 </head>
 
-<body style="background-color: #23272b;">
+<title>Ders Takip Uygulaması</title>
+</head>
+
+<body style="background-color: #23272b;  color: white;">
   <div class="container">
     <br>
     <h1>Ders Takip Uygulaması</h1>
@@ -35,6 +37,7 @@
     {
     ?>
       <tr>
+        <td></td>
         <td></td>
         <?php
         $d = 1;
@@ -67,6 +70,7 @@
       ?>
         <tr>
           <td><?php echo $developerweek['WeekName']; ?></td>
+          <td><?php echo $developerweek['WeekDate']; ?></td>
           <?php
 
 
@@ -125,6 +129,43 @@
 
 
 
+    function addlesson($conn)
+    {
+      if (isset($_POST['addlesson'])) {
+        $lessonname = $_POST['lessonname'];
+        $lessondayid = $_POST['lessondayid'];
+        $lessontime = $_POST['lesstime'];
+
+
+
+        $stmt = $conn->prepare("INSERT INTO lessons(LessonName,FkLessonDay,LessonTime) VALUES (?,?,?)");
+        $stmt->bind_param("sss", $lessonname, $lessondayid, $lessontime);
+        $stmt->execute();
+
+        $sqlQueryLessonid = "Select * from lessons where LessonName='" . $lessonname . "'";
+        $resultSetLessonid = mysqli_query($conn, $sqlQueryLessonid) or die("database error:" . mysqli_error($conn));
+        $developerlessonid = mysqli_fetch_assoc($resultSetLessonid);
+        $lessid = $developerlessonid['id'];
+
+
+
+
+        $sqlQueryweek = "SELECT COUNT(id) AS WeekNumber FROM weeks;";
+        $resultSetweek = mysqli_query($conn, $sqlQueryweek) or die("database error:" . mysqli_error($conn));
+        $developerweek = mysqli_fetch_assoc($resultSetweek);
+        $weeknumber = $developerweek['WeekNumber'];
+        $a = 0;
+        for ($x = 1; $x <= $weeknumber; $x++) {
+          $stmt2 = $conn->prepare("INSERT INTO watchstats(FkLessonId,FkLessonWeekName,`Status`) VALUES (?,?,?)");
+          $stmt2->bind_param("sss", $lessid, $x, $a);
+          $stmt2->execute();
+        }
+        echo "<meta http-equiv='refresh' content='0'>";
+      }
+    }
+
+
+
     ?>
 
     <form id="form" action="" method="POST">
@@ -132,6 +173,7 @@
         <thead>
           <tr>
             <th>#</th>
+            <th></th>
             <?php
 
             $LessonCount = findLessonDayCount(1, $conn);
@@ -154,15 +196,54 @@
         </tbody>
       </table>
       <div class="col-md-12 text-center">
-        <input class="btn btn-primary" type="submit" value="Verileri Güncelle">
+        <input class="btn btn-primary" type="submit" value="Tablo Verilerini Güncelle">
       </div>
-
-
     </form>
 
+    <div class="row">
+      <div class="col-md">
+        <form class="mt-3" action="" method="POST">
+          <div class="form-group">
+            <label class="font" for="lessname">Ders Adı:</label>
+            <input type="text" class="form-control bg-secondary text-white col-md-2" id="lessname" placeholder="Ders Adını Giriniz" name="lessonname" required>
+          </div>
+          <div class="form-group">
+            <label class="font" for="lessday">Ders Günü:</label>
+            <select class="form-control bg-secondary text-white col-md-2" name="lessondayid" id="lessday">
+              <?php
+              $sqlQueryDays = "select * from days";
+              $resultSetDays = mysqli_query($conn, $sqlQueryDays) or die("database error:" . mysqli_error($conn));
+              while ($developerDays = mysqli_fetch_assoc($resultSetDays)) {
+                $dayid = $developerDays['id'];
+                $dayname = $developerDays['DayName'];
+              ?>
+                <option value="<?php echo $dayid; ?>"><?php echo $dayname; ?></option>
+              <?php
 
+              }
+              ?>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="font" for="appt">Zaman Seçin:</label>
+            <input type="time" id="appt" class="form-control bg-secondary text-white col-md-2" name="lesstime" required>
+          </div>
+          <!-- Onay Mesajı Alma -->
+          <!-- <input class="btn btn-primary mt-1" onclick="return confirm('Tüm izlenme verileri silinecek emin misin?');" type="submit" value="Hafta Sayısını Güncelle"> -->
+          <input class="btn btn-primary mt-1" type="submit" name="addlesson" value="Ders Ekle">
+        </form>
+        <?php
+        addlesson($conn);
+
+        ?>
+
+      </div>
+    </div>
 
   </div>
+
+
+
   <script src="js/jquery-3.5.1.min.js"></script>
   <script type="text/javascript">
     // when page is ready
@@ -173,13 +254,17 @@
         $(this).find('input[type=checkbox]:not(:checked)').prop('checked', true).val(0);
       })
     })
+
+    // Time
+    $('input.timepicker').timepicker({
+      timeFormat: 'HH:mm:ss',
+    });
   </script>
+
 
 
   <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
-
-
 
 
 </body>
