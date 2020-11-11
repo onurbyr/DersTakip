@@ -44,14 +44,25 @@
         while ($d <= 5) {
           $sqlLessName = "SELECT * FROM `lessons` WHERE FkLessonDay='" . $d . "'";
           $result = $conn->query($sqlLessName);
-          while ($row = $result->fetch_assoc()) {
-            $lessons[] = $row;
-            $LessonName = $row["LessonName"];
-            $LessonTime = $row["LessonTime"];
-            $LessonTime = substr($LessonTime, 0, -3);
+          if ($result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+              $lessons[] = $row;
+              $LessonName = $row["LessonName"];
+              $LessonTime = $row["LessonTime"];
+              $LessonTime = substr($LessonTime, 0, -3);
         ?>
-            <td><?php echo $LessonName . "<hr>" . "<p class=hidden>$row[id]</p>" . $LessonTime ?></td>
+              <td><?php echo $LessonName . "<hr>" . $LessonTime ?></td>
 
+            <?php
+            }
+          }
+          //Gün boşluk kontrol 
+          else {
+            $lessons[]['emptyday'] = "b";
+
+
+            ?>
+            <td><?php echo "Ders bulunmamaktadır" . "<hr>" ?></td>
         <?php
           }
           $d++;
@@ -60,6 +71,9 @@
         ?>
       </tr>
       <?php
+
+
+
 
 
       $sqlQueryweek = "select * from weeks";
@@ -78,9 +92,17 @@
           foreach ($lessons as $lesid) {
 
             $lessonid = $lesid['id'];
+            $emptyday = $lesid['emptyday'];
             $sqlQuery = "SELECT * from watchstats INNER JOIN weeks on watchstats.FkLessonWeekName=weeks.id WHERE FkLessonId='" . $lessonid . "' and FkLessonWeekName='" . $week . "' ";
             $resultSet = mysqli_query($conn, $sqlQuery) or die("database error:" . mysqli_error($conn));
-
+            //Gün boşluk kontrol
+            if ($emptyday == "b") {
+          ?>
+              <td>
+                <input type="checkbox" disabled>
+              </td>
+            <?php
+            }
             while ($developer = mysqli_fetch_assoc($resultSet)) {
               $checkvalue = $developer['Status'];
               $checkcontrol = "";
@@ -89,12 +111,11 @@
               } elseif ($checkvalue == 0) {
                 $checkcontrol = "";
               }
-          ?>
+            ?>
               <td>
-                <input id="testName" type="checkbox" name="check[]" value="1" <?php echo $checkcontrol ?>>
+                <input type="checkbox" name="check[]" value="1" <?php echo $checkcontrol ?>>
               </td>
           <?php
-
             } //while
           } //foreach lesson
           ?>
@@ -113,12 +134,16 @@
         $resultSetweek2 = mysqli_query($conn, $sqlQueryweek2) or die("database error:" . mysqli_error($conn));
         while ($developerweek2 = mysqli_fetch_assoc($resultSetweek2)) {
           $week2 = $developerweek2['id'];
-
           foreach ($lessons as $lesid2) {
+            $emptyday = $lesid2['emptyday'];
             $lessonid2 = $lesid2['id'];
-            $sqlQuery = "UPDATE watchstats INNER JOIN weeks on watchstats.FkLessonWeekName=weeks.id SET watchstats.`Status`='" . $lessoncheck[$i] . "' WHERE FkLessonId='" . $lessonid2 . "' and FkLessonWeekName='" . $week2 . "'  ";
-            $conn->query($sqlQuery);
-            $i++;
+            //Gün boşluk kontrol
+            if ($emptyday == "b") {
+            } else {
+              $sqlQuery = "UPDATE watchstats INNER JOIN weeks on watchstats.FkLessonWeekName=weeks.id SET watchstats.`Status`='" . $lessoncheck[$i] . "' WHERE FkLessonId='" . $lessonid2 . "' and FkLessonWeekName='" . $week2 . "'  ";
+              $conn->query($sqlQuery);
+              $i++;
+            }
           }
         }
         echo "<meta http-equiv='refresh' content='0'>";
@@ -251,7 +276,7 @@
         <form class="mt-3" action="" method="POST">
           <div class="form-group">
             <label class="font" for="selectlesson">Seçili Dersi Siliniz:</label>
-            <select class="form-control bg-secondary text-white col-md-4" name="lessonid" id="selectlesson">
+            <select class="form-control bg-secondary text-white col-md-4" name="lessonid" id="selectlesson" required>
               <?php
               $sqlQueryLessons = "SELECT * FROM lessons";
               $resultSetLessons = mysqli_query($conn, $sqlQueryLessons) or die("database error:" . mysqli_error($conn));
