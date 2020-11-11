@@ -142,12 +142,10 @@
         $stmt->bind_param("sss", $lessonname, $lessondayid, $lessontime);
         $stmt->execute();
 
-        $sqlQueryLessonid = "Select * from lessons where LessonName='" . $lessonname . "'";
+        $sqlQueryLessonid = "SELECT * FROM lessons ORDER BY id DESC LIMIT 0, 1";
         $resultSetLessonid = mysqli_query($conn, $sqlQueryLessonid) or die("database error:" . mysqli_error($conn));
         $developerlessonid = mysqli_fetch_assoc($resultSetLessonid);
         $lessid = $developerlessonid['id'];
-
-
 
 
         $sqlQueryweek = "SELECT COUNT(id) AS WeekNumber FROM weeks;";
@@ -160,6 +158,17 @@
           $stmt2->bind_param("sss", $lessid, $x, $a);
           $stmt2->execute();
         }
+        echo "<meta http-equiv='refresh' content='0'>";
+      }
+    }
+
+    function deletelesson($conn)
+    {
+      if (isset($_POST['deletelesson'])) {
+        $lessonid = $_POST['lessonid'];
+        $stmt = $conn->prepare("DELETE lessons,watchstats FROM lessons INNER JOIN watchstats on lessons.id=watchstats.FkLessonId where lessons.id=? and watchstats.FkLessonId=?");
+        $stmt->bind_param("ss", $lessonid, $lessonid);
+        $stmt->execute();
         echo "<meta http-equiv='refresh' content='0'>";
       }
     }
@@ -205,11 +214,11 @@
         <form class="mt-3" action="" method="POST">
           <div class="form-group">
             <label class="font" for="lessname">Ders Adı:</label>
-            <input type="text" class="form-control bg-secondary text-white col-md-2" id="lessname" placeholder="Ders Adını Giriniz" name="lessonname" required>
+            <input type="text" class="form-control bg-secondary text-white col-md-4" id="lessname" placeholder="Ders Adını Giriniz" name="lessonname" required>
           </div>
           <div class="form-group">
             <label class="font" for="lessday">Ders Günü:</label>
-            <select class="form-control bg-secondary text-white col-md-2" name="lessondayid" id="lessday">
+            <select class="form-control bg-secondary text-white col-md-4" name="lessondayid" id="lessday">
               <?php
               $sqlQueryDays = "select * from days";
               $resultSetDays = mysqli_query($conn, $sqlQueryDays) or die("database error:" . mysqli_error($conn));
@@ -226,7 +235,7 @@
           </div>
           <div class="form-group">
             <label class="font" for="appt">Zaman Seçin:</label>
-            <input type="time" id="appt" class="form-control bg-secondary text-white col-md-2" name="lesstime" required>
+            <input type="time" id="appt" class="form-control bg-secondary text-white col-md-4" name="lesstime" required>
           </div>
           <!-- Onay Mesajı Alma -->
           <!-- <input class="btn btn-primary mt-1" onclick="return confirm('Tüm izlenme verileri silinecek emin misin?');" type="submit" value="Hafta Sayısını Güncelle"> -->
@@ -237,6 +246,33 @@
 
         ?>
 
+      </div>
+      <div class="col-md">
+        <form class="mt-3" action="" method="POST">
+          <div class="form-group">
+            <label class="font" for="selectlesson">Seçili Dersi Siliniz:</label>
+            <select class="form-control bg-secondary text-white col-md-4" name="lessonid" id="selectlesson">
+              <?php
+              $sqlQueryLessons = "SELECT * FROM lessons";
+              $resultSetLessons = mysqli_query($conn, $sqlQueryLessons) or die("database error:" . mysqli_error($conn));
+              while ($developerLessons = mysqli_fetch_assoc($resultSetLessons)) {
+                $lessonid = $developerLessons['id'];
+                $lessonname = $developerLessons['LessonName'];
+              ?>
+                <option value="<?php echo $lessonid; ?>"><?php echo $lessonname; ?></option>
+              <?php
+              }
+
+              ?>
+            </select>
+          </div>
+          <!-- Onay Mesajı Alma -->
+          <input class="btn btn-primary mt-1" onclick="return confirm('Seçili ders ve derse ait izlenme verileri silinecek emin misin?');" type="submit" name="deletelesson" value="Dersi Sil">
+
+        </form>
+        <?php
+        deletelesson($conn);
+        ?>
       </div>
     </div>
 
@@ -254,11 +290,6 @@
         $(this).find('input[type=checkbox]:not(:checked)').prop('checked', true).val(0);
       })
     })
-
-    // Time
-    $('input.timepicker').timepicker({
-      timeFormat: 'HH:mm:ss',
-    });
   </script>
 
 
