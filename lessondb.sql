@@ -11,7 +11,7 @@
  Target Server Version : 80017
  File Encoding         : 65001
 
- Date: 11/11/2020 19:34:18
+ Date: 11/11/2020 23:55:29
 */
 
 SET NAMES utf8mb4;
@@ -25,7 +25,7 @@ CREATE TABLE `days`  (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `DayName` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of days
@@ -46,7 +46,7 @@ CREATE TABLE `lessons`  (
   `FkLessonDay` int(11) NULL DEFAULT NULL,
   `LessonTime` time(0) NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of lessons
@@ -62,7 +62,7 @@ CREATE TABLE `watchstats`  (
   `FkLessonWeekName` int(11) NULL DEFAULT NULL,
   `Status` tinyint(1) NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 166 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 166 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of watchstats
@@ -77,25 +77,10 @@ CREATE TABLE `weeks`  (
   `WeekName` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
   `WeekDate` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 16 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 16 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of weeks
 -- ----------------------------
-INSERT INTO `weeks` VALUES (1, '1.Hafta', '5 Ekim - 11 Ekim');
-INSERT INTO `weeks` VALUES (2, '2.Hafta', '12 Ekim - 18 Ekim');
-INSERT INTO `weeks` VALUES (3, '3.Hafta', '19 Ekim - 25 Ekim');
-INSERT INTO `weeks` VALUES (4, '4.Hafta', '26 Ekim - 1 Kasım');
-INSERT INTO `weeks` VALUES (5, '5.Hafta', '2 Kasım - 8 Kasım');
-INSERT INTO `weeks` VALUES (6, '6.Hafta', '9 Kasım - 15 Kasım');
-INSERT INTO `weeks` VALUES (7, '7.Hafta', '16 Kasım - 22 Kasım');
-INSERT INTO `weeks` VALUES (8, '8.Hafta', '23 Kasım - 29 Kasım');
-INSERT INTO `weeks` VALUES (9, '9.Hafta', '30 Kasım - 6 Aralık');
-INSERT INTO `weeks` VALUES (10, '10.Hafta', '7 Aralık - 13 Aralık');
-INSERT INTO `weeks` VALUES (11, '11.Hafta', '14 Aralık - 20 Aralık');
-INSERT INTO `weeks` VALUES (12, '12.Hafta', '21 Aralık - 27 Aralık');
-INSERT INTO `weeks` VALUES (13, '13.Hafta', '28 Aralık - 3 Ocak');
-INSERT INTO `weeks` VALUES (14, '14.Hafta', '4 Ocak - 10 Ocak');
-INSERT INTO `weeks` VALUES (15, '15.Hafta', '11 Ocak - 17 Ocak');
 
 SET FOREIGN_KEY_CHECKS = 1;

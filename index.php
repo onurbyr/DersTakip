@@ -120,7 +120,7 @@
           } //foreach lesson
           ?>
         </tr>
-    <?php
+        <?php
 
       } //while devoloperweek
 
@@ -156,34 +156,53 @@
 
     function addlesson($conn)
     {
+      //Hafta Verileri Kontrol
+      $sqlcheckweek = "SELECT id FROM weeks";
+      $result = $conn->query($sqlcheckweek);
+      if ($result->num_rows > 0) {
+        $WeekAdded = True;
+      }
+
       if (isset($_POST['addlesson'])) {
-        $lessonname = $_POST['lessonname'];
-        $lessondayid = $_POST['lessondayid'];
-        $lessontime = $_POST['lesstime'];
+        if ($WeekAdded) {
+          $lessonname = $_POST['lessonname'];
+          $lessondayid = $_POST['lessondayid'];
+          $lessontime = $_POST['lesstime'];
 
 
 
-        $stmt = $conn->prepare("INSERT INTO lessons(LessonName,FkLessonDay,LessonTime) VALUES (?,?,?)");
-        $stmt->bind_param("sss", $lessonname, $lessondayid, $lessontime);
-        $stmt->execute();
+          $stmt = $conn->prepare("INSERT INTO lessons(LessonName,FkLessonDay,LessonTime) VALUES (?,?,?)");
+          $stmt->bind_param("sss", $lessonname, $lessondayid, $lessontime);
+          $stmt->execute();
 
-        $sqlQueryLessonid = "SELECT * FROM lessons ORDER BY id DESC LIMIT 0, 1";
-        $resultSetLessonid = mysqli_query($conn, $sqlQueryLessonid) or die("database error:" . mysqli_error($conn));
-        $developerlessonid = mysqli_fetch_assoc($resultSetLessonid);
-        $lessid = $developerlessonid['id'];
+          $sqlQueryLessonid = "SELECT * FROM lessons ORDER BY id DESC LIMIT 0, 1";
+          $resultSetLessonid = mysqli_query($conn, $sqlQueryLessonid) or die("database error:" . mysqli_error($conn));
+          $developerlessonid = mysqli_fetch_assoc($resultSetLessonid);
+          $lessid = $developerlessonid['id'];
 
 
-        $sqlQueryweek = "SELECT COUNT(id) AS WeekNumber FROM weeks;";
-        $resultSetweek = mysqli_query($conn, $sqlQueryweek) or die("database error:" . mysqli_error($conn));
-        $developerweek = mysqli_fetch_assoc($resultSetweek);
-        $weeknumber = $developerweek['WeekNumber'];
-        $a = 0;
-        for ($x = 1; $x <= $weeknumber; $x++) {
-          $stmt2 = $conn->prepare("INSERT INTO watchstats(FkLessonId,FkLessonWeekName,`Status`) VALUES (?,?,?)");
-          $stmt2->bind_param("sss", $lessid, $x, $a);
-          $stmt2->execute();
+          $sqlQueryweek = "SELECT COUNT(id) AS WeekNumber FROM weeks;";
+          $resultSetweek = mysqli_query($conn, $sqlQueryweek) or die("database error:" . mysqli_error($conn));
+          $developerweek = mysqli_fetch_assoc($resultSetweek);
+          $weeknumber = $developerweek['WeekNumber'];
+          $a = 0;
+          for ($x = 1; $x <= $weeknumber; $x++) {
+            $stmt2 = $conn->prepare("INSERT INTO watchstats(FkLessonId,FkLessonWeekName,`Status`) VALUES (?,?,?)");
+            $stmt2->bind_param("sss", $lessid, $x, $a);
+            $stmt2->execute();
+          }
+          echo "<meta http-equiv='refresh' content='0'>";
+        } else {
+        ?>
+          <div class="alert alert-danger alert-dismissible mt-3 fade show" role="alert">
+            <strong>Öncelikle haftaları belirleyiniz.</strong>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+
+    <?php
         }
-        echo "<meta http-equiv='refresh' content='0'>";
       }
     }
 
@@ -194,6 +213,34 @@
         $stmt = $conn->prepare("DELETE lessons,watchstats FROM lessons INNER JOIN watchstats on lessons.id=watchstats.FkLessonId where lessons.id=? and watchstats.FkLessonId=?");
         $stmt->bind_param("ss", $lessonid, $lessonid);
         $stmt->execute();
+        echo "<meta http-equiv='refresh' content='0'>";
+      }
+    }
+
+    function addweekdate($conn)
+    {
+      if (isset($_POST['dateweek'])) {
+
+        $stmt = $conn->prepare("DELETE weeks FROM weeks");
+        $stmt2 = $conn->prepare("DELETE lessons FROM lessons");
+        $stmt3 = $conn->prepare("DELETE watchstats FROM watchstats");
+        $stmt4 = $conn->prepare("ALTER TABLE weeks AUTO_INCREMENT = 1;");
+        $stmt->execute();
+        $stmt2->execute();
+        $stmt3->execute();
+        $stmt4->execute();
+
+        foreach ($_POST['weeknames'] as $weekname) {
+          $weeknamearray[] = $weekname;
+        }
+
+        $i = 0;
+        foreach ($_POST['weekdate'] as $weekdate) {
+          $stmt5 = $conn->prepare("INSERT INTO weeks(WeekName,WeekDate) VALUES (?,?)");
+          $stmt5->bind_param("ss", $weeknamearray[$i], $weekdate);
+          $stmt5->execute();
+          $i++;
+        }
         echo "<meta http-equiv='refresh' content='0'>";
       }
     }
@@ -235,15 +282,63 @@
     </form>
 
     <div class="row">
+
+      <?php
+      $DisplayForm = True;
+      if (isset($_POST['weekcount'])) {
+        $DisplayForm = False;
+        $weekcount = $_POST['weeknumber'];
+      ?>
+        <div class="col-md ">
+          <form class="mt-3" action="" method="POST">
+            <?php
+            for ($i = 1; $i <= $weekcount; $i++) {
+            ?>
+              <div class=form-group>
+                <label for="weekname<?php echo $i ?>"> <?php echo $i ?>.Hafta İçin Tarih Aralığı Giriniz: </label>
+                <input type="hidden" name="weeknames[]" value="<?php echo $i ?>.Hafta">
+                <input type="text" class="form-control bg-secondary text-white col-md" id="weekname<?php echo $i ?>" placeholder="" name="weekdate[]" required>
+              </div>
+
+            <?php
+            }
+            ?>
+            <input class="btn btn-primary mt-1" onclick="return confirm('Hafta isimleri, dersler ve ders kayıtları silinecek emin misin?');" type="submit" name="dateweek" value="Tarih Aralıklarını Belirle">
+          </form>
+        </div>
+      <?php
+      }
+      addweekdate($conn);
+
+      if ($DisplayForm) {
+      ?>
+        <div class="col-md ">
+          <form class="mt-3" action="" method="POST">
+            <div class="form-group">
+              <label class="font" for="weekcount">Hafta Sayısını Giriniz:</label>
+              <input type="number" class="form-control bg-secondary text-white col-md" id="weekcount" name="weeknumber" value="14" min="1" max="20" required>
+            </div>
+            <input class="btn btn-primary mt-1" type="submit" name="weekcount" value="Hafta Sayısını Belirle">
+          </form>
+        </div>
+      <?php
+
+      }
+
+      ?>
+
+
+
+
       <div class="col-md">
         <form class="mt-3" action="" method="POST">
           <div class="form-group">
             <label class="font" for="lessname">Ders Adı:</label>
-            <input type="text" class="form-control bg-secondary text-white col-md-4" id="lessname" placeholder="Ders Adını Giriniz" name="lessonname" required>
+            <input type="text" class="form-control bg-secondary text-white col-md" id="lessname" placeholder="Ders Adını Giriniz" name="lessonname" required>
           </div>
           <div class="form-group">
             <label class="font" for="lessday">Ders Günü:</label>
-            <select class="form-control bg-secondary text-white col-md-4" name="lessondayid" id="lessday">
+            <select class="form-control bg-secondary text-white col-md" name="lessondayid" id="lessday">
               <?php
               $sqlQueryDays = "select * from days";
               $resultSetDays = mysqli_query($conn, $sqlQueryDays) or die("database error:" . mysqli_error($conn));
@@ -260,7 +355,7 @@
           </div>
           <div class="form-group">
             <label class="font" for="appt">Zaman Seçin:</label>
-            <input type="time" id="appt" class="form-control bg-secondary text-white col-md-4" name="lesstime" required>
+            <input type="time" id="appt" class="form-control bg-secondary text-white col-md" name="lesstime" required>
           </div>
           <!-- Onay Mesajı Alma -->
           <!-- <input class="btn btn-primary mt-1" onclick="return confirm('Tüm izlenme verileri silinecek emin misin?');" type="submit" value="Hafta Sayısını Güncelle"> -->
@@ -276,7 +371,7 @@
         <form class="mt-3" action="" method="POST">
           <div class="form-group">
             <label class="font" for="selectlesson">Seçili Dersi Siliniz:</label>
-            <select class="form-control bg-secondary text-white col-md-4" name="lessonid" id="selectlesson" required>
+            <select class="form-control bg-secondary text-white col-md" name="lessonid" id="selectlesson" required>
               <?php
               $sqlQueryLessons = "SELECT * FROM lessons";
               $resultSetLessons = mysqli_query($conn, $sqlQueryLessons) or die("database error:" . mysqli_error($conn));
